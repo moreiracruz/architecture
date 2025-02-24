@@ -1,0 +1,15 @@
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: 'eureka-server'
+    static_configs:
+      - targets: ['eureka-server:8761']
+
+  - job_name: 'backend-service'
+    static_configs:
+      - targets: ['backend-service:8081']
+
+  - job_name: 'client-service'
+    static_configs:
+      - targets: ['client-service:8082']

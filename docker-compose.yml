@@ -1,0 +1,106 @@
+version: '3'
+services:
+  # Serviços do projeto principal
+  eureka-server:
+    image: eureka-server
+    build:
+      context: ./eureka-server
+    ports:
+      - "8761:8761"
+    networks:
+      - app-network
+
+  backend-service:
+    image: backend-service
+    build:
+      context: ./backend-service
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    ports:
+      - "8081:8081"
+    depends_on:
+      - eureka-server
+      - redis
+
+  client-service:
+    image: client-service
+    build:
+      context: ./client-service
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    ports:
+      - "8082:8082"
+    networks:
+      - app-network
+    depends_on:
+      - eureka-server
+
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+
+  # Serviços de monitoramento
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.10.0
+    environment:
+      - discovery.type=single-node
+    ports:
+      - "9200:9200"
+
+  logstash:
+    image: docker.elastic.co/logstash/logstash:7.10.0
+    volumes:
+      - ./logstash.conf:/usr/share/logstash/pipeline/logstash.conf
+    ports:
+      - "5000:5000"
+    depends_on:
+      - elasticsearch
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:7.10.0
+    ports:
+      - "5601:5601"
+    depends_on:
+      - elasticsearch
+
+  prometheus:
+    image: prom/prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    depends_on:
+      - backend-service
+      - client-service
+
+  grafana:
+    image: grafana/grafana
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
+
+  jenkins:
+    image: jenkins/jenkins:lts
+    container_name: jenkins
+    ports:
+      - "8080:8080"  # Porta para acessar a interface do Jenkins
+      - "50000:50000"  # Porta para agentes do Jenkins
+    networks:
+      - app-network
+    volumes:
+      - jenkins_home:/var/jenkins_home  # Volume para persistir dados do Jenkins
+    environment:
+      - JAVA_OPTS=-Djenkins.install.runSetupWizard=false  # Desativa o setup wizard inicial
+    depends_on:
+      - eureka-server
+      - backend-service
+      - client-service
+
+volumes:
+  jenkins_home:
+
+networks:
+  app-network:
+    driver: bridge

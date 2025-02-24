@@ -1,0 +1,33 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: backend-service
+  redis:
+    host: redis
+    port: 6379
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      myService:
+        register-health-indicator: true
+        failure-rate-threshold: 50
+        minimum-number-of-calls: 10
+        automatic-transition-from-open-to-half-open-enabled: true
+        wait-duration-in-open-state: 5s
+        permitted-number-of-calls-in-half-open-state: 3
+        sliding-window-size: 10
+        sliding-window-type: COUNT_BASED
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+
+management:
+  metrics:
+    enable:
+      process: false
+      system: false
