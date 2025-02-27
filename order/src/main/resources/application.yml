@@ -1,0 +1,24 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: order
+  elasticsearch:
+    uris: http://elasticsearch:9200
+  data:
+    elasticsearch:
+      repositories:
+        enabled: true
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://discovery:8761/eureka/
+
+logging:
+  level:
+    com.netflix: DEBUG
+    org.elasticsearch: DEBUG
+    org.springframework: DEBUG
+    org.springframework.data.elasticsearch: DEBUG
